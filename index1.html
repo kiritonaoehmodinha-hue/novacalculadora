@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALCULADORA FÊNIX - FAMILIA054</title>
+
+<style>
+:root{ --bg:#0b0b0b; --card:#171717; --red:#ff2b2b; --red2:#8b0000; --text:#ffffff; }
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}
+body{background:linear-gradient(180deg,#090909,#141414);color:var(--text);min-height:100vh;}
+header{padding:25px;text-align:center;background:linear-gradient(90deg,var(--red2),var(--red));box-shadow:0 0 25px rgba(255,0,0,.4);}
+.logo{font-size:42px;font-weight:700;}
+.sub{opacity:.9;margin-top:5px;}
+.menu{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:20px;}
+.menu button{background:#1f1f1f;border:1px solid var(--red);color:white;padding:12px 18px;border-radius:12px;cursor:pointer;transition:.3s;}
+.menu button:hover{transform:translateY(-2px);background:var(--red);}
+.aba{display:none;padding:20px}
+.ativa{display:block}
+.container{max-width:1000px;margin:auto;}
+.card{background:var(--card);padding:25px;border-radius:18px;box-shadow:0 0 20px rgba(255,0,0,.15);animation:fade .3s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+h2{color:#ff5d5d;margin-bottom:15px;}
+input,select{width:100%;padding:12px;margin:10px 0;border:none;border-radius:10px;background:#252525;color:white;}
+.btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--red);color:white;font-weight:bold;cursor:pointer;}
+.btn:hover{opacity:.9}
+.resultado{margin-top:20px;line-height:2;font-size:18px;}
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th{background:var(--red2);padding:12px;}
+td{padding:10px;border:1px solid #333;text-align:center;}
+.total-box{margin-top:15px;padding:15px;background:#111;border-radius:10px;line-height:2;}
+.limpar{background:#555;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">🔥 CALCULADORA FÊNIX</div>
+<div class="sub">FAMILIA054</div>
+</header>
+
+<div class="menu">
+<button onclick="abrirAba('producao')">📦 Produção</button>
+<button onclick="abrirAba('vendas')">💰 Vendas</button>
+<button onclick="abrirAba('relatorio')">📊 Relatório</button>
+</div>
+
+<div class="container">
+
+<!-- ABA PRODUÇÃO -->
+<div id="producao" class="aba ativa">
+<div class="card">
+<h2>📦 Produção de Armas</h2>
+<select id="produtoProducao">
+    <option value="mtar">MTAR</option>
+    <option value="mini_smg">Mini SMG</option>
+    <option value="mp5">MP5</option>
+    <option value="mini_uzi">Mini Uzi</option>
+    <option value="tec9">TEC-9</option>
+    <option value="thompson">Thompson</option>
+</select>
+<input type="number" id="quantidadeProducao" placeholder="Quantidade a fabricar">
+<button class="btn" onclick="calcularProducao()">Calcular Produção</button>
+<div id="resultadoProducao" class="resultado"></div>
+</div>
+</div>
+
+<!-- ABA VENDAS -->
+<div id="vendas" class="aba">
+<div class="card">
+<h2>💰 Venda + Comissão</h2>
+<select id="produtoVenda">
+    <option value="mtar">MTAR</option>
+    <option value="mini_smg">Mini SMG</option>
+    <option value="mp5">MP5</option>
+    <option value="mini_uzi">Mini Uzi</option>
+    <option value="tec9">TEC-9</option>
+    <option value="thompson">Thompson</option>
+</select>
+<select id="tipoParceria">
+    <option value="sem">Sem Parceria</option>
+    <option value="com">Com Parceria</option>
+    <option value="forte">Parceria Forte</option>
+</select>
+<input type="number" id="quantidadeVenda" placeholder="Quantidade vendida">
+<input type="number" id="percentual" placeholder="Comissão (%)">
+<button class="btn" onclick="calcularVenda()">Calcular Venda</button>
+<div id="resultadoVenda" class="resultado"></div>
+</div>
+</div>
+
+<!-- ABA RELATÓRIO -->
+<div id="relatorio" class="aba">
+<div class="card">
+<h2>📊 Relatório</h2>
+<table>
+<thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd</th><th>Venda</th><th>Comissão</th><th>Firma</th></tr></thead>
+<tbody id="tabelaRelatorio"></tbody>
+</table>
+<div class="total-box">
+<h3 id="totalVendido">Total Vendido: R$ 0,00</h3>
+<h3 id="totalComissao">Total Comissão: R$ 0,00</h3>
+<h3 id="totalFirma">Total Firma: R$ 0,00</h3>
+</div>
+<button class="btn limpar" onclick="limparRelatorio()">Limpar Relatório</button>
+</div>
+</div>
+
+</div>
+
+<script>
+let vendas = JSON.parse(localStorage.getItem("fenix_vendas")) || [];
+
+// Dados de Produção
+const receitas = {
+    mtar: { nome: "MTAR", pecas: 30, molas: 30, gatilhos: 30, dinheiro: 12000 },
+    mini_smg: { nome: "Mini SMG", pecas: 25, molas: 19, gatilhos: 25, dinheiro: 9000 },
+    mp5: { nome: "MP5", pecas: 25, molas: 25, gatilhos: 18, dinheiro: 9000 },
+    mini_uzi: { nome: "Mini Uzi", pecas: 27, molas: 26, gatilhos: 20, dinheiro: 8000 },
+    tec9: { nome: "TEC-9", pecas: 27, molas: 27, gatilhos: 19, dinheiro: 10000 },
+    thompson: { nome: "Thompson", pecas: 30, molas: 30, gatilhos: 20, dinheiro: 12000 }
+};
+
+// Dados de Preços (ALTERE AQUI OS PREÇOS DOS OUTROS PRODUTOS)
+const precos = {
+    mtar: { sem: 280000, com: 224000, forte: 210000 },
+    mp5: { sem: 220000, com: 176000, forte: 165000 },
+    // Preços padrão para os demais (mude os valores abaixo conforme necessário)
+    mini_smg: { sem: 210000, com: 168000, forte: 157500 },
+    mini_uzi: { sem: 230000, com: 184000, forte: 172500 },
+    tec9: { sem: 200000, com: 160000, forte: 150000 },
+    thompson: { sem: 200000, com: 160000, forte: 150000 }
+};
+
+function abrirAba(id){
+    document.querySelectorAll(".aba").forEach(a=>a.classList.remove("ativa"));
+    document.getElementById(id).classList.add("ativa");
+}
+
+function calcularProducao(){
+    let prod = document.getElementById("produtoProducao").value;
+    let qtd = Number(document.getElementById("quantidadeProducao").value);
+    if(qtd <= 0){ alert("Digite uma quantidade válida."); return; }
+    let item = receitas[prod];
+    document.getElementById("resultadoProducao").innerHTML=`
+    <b>${item.nome} (${qtd}x)</b><br>
+    🧩 Peças: <b>${(item.pecas * qtd).toLocaleString()}</b><br>
+    🌀 Molas: <b>${(item.molas * qtd).toLocaleString()}</b><br>
+    🔫 Gatilhos: <b>${(item.gatilhos * qtd).toLocaleString()}</b><br>
+    💸 Dinheiro Sujo: <b>R$ ${(item.dinheiro * qtd).toLocaleString('pt-BR')}</b>`;
+}
+
+function calcularVenda(){
+    let prodKey = document.getElementById("produtoVenda").value;
+    let parceria = document.getElementById("tipoParceria").value;
+    let qtd = Number(document.getElementById("quantidadeVenda").value);
+    let perc = Number(document.getElementById("percentual").value);
+    
+    if(qtd<=0 || isNaN(qtd)){ alert("Preencha a quantidade."); return; }
+    
+    let valorUnitario = precos[prodKey][parceria];
+    let total = qtd * valorUnitario;
+    let comissao = total * perc / 100;
+    let firma = total - comissao;
+
+    document.getElementById("resultadoVenda").innerHTML=`
+    📦 <b>${receitas[prodKey].nome}</b><br>
+    💰 Valor Total: <b>R$ ${total.toLocaleString('pt-BR')}</b><br>
+    👤 Comissão: <b>R$ ${comissao.toLocaleString('pt-BR')}</b><br>
+    🏢 Firma Recebe: <b style="color:#00ff88">R$ ${firma.toLocaleString('pt-BR')}</b>`;
+
+    vendas.push({
+        data: new Date().toLocaleDateString('pt-BR'),
+        item: receitas[prodKey].nome,
+        tipo: parceria.toUpperCase(),
+        qtd: qtd,
+        venda: total,
+        comissao: comissao,
+        empresa: firma
+    });
+    localStorage.setItem("fenix_vendas",JSON.stringify(vendas));
+    carregarRelatorio();
+}
+
+function carregarRelatorio(){
+    let tabela = document.getElementById("tabelaRelatorio");
+    tabela.innerHTML = "";
+    let totalVendas=0, totalComissao=0, totalFirma=0;
+    vendas.forEach(v=>{
+        totalVendas+=v.venda; totalComissao+=v.comissao; totalFirma+=v.empresa;
+        tabela.innerHTML += `<tr><td>${v.data}</td><td>${v.item}</td><td>${v.tipo}</td><td>${v.qtd}</td><td>R$ ${v.venda.toLocaleString('pt-BR')}</td><td>R$ ${v.comissao.toLocaleString('pt-BR')}</td><td>R$ ${v.empresa.toLocaleString('pt-BR')}</td></tr>`;
+    });
+    document.getElementById("totalVendido").innerHTML=`Total Vendido: R$ ${totalVendas.toLocaleString('pt-BR')}`;
+    document.getElementById("totalComissao").innerHTML=`Total Comissão: R$ ${totalComissao.toLocaleString('pt-BR')}`;
+    document.getElementById("totalFirma").innerHTML=`Total Firma: R$ ${totalFirma.toLocaleString('pt-BR')}`;
+}
+
+function limparRelatorio(){
+    if(confirm("Apagar tudo?")){ vendas=[]; localStorage.removeItem("fenix_vendas"); carregarRelatorio(); }
+}
+
+carregarRelatorio();
+</script>
+</body>
+</html>
